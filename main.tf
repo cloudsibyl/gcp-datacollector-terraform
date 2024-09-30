@@ -68,7 +68,7 @@ resource "google_cloud_scheduler_job" "cloud_run_job_scheduler" {
   name        = "${var.cloud_run_job_name}-scheduler"
   description = "Scheduled trigger for Cloud Run job"
   schedule    = "30 20 * * *"  # Runs every night at 8:30 PM
-  time_zone   = "UTC"  # Set to UTC
+  time_zone   = "Etc/UTC"  # Set to UTC
   region      = var.cloud_run_location  # Explicitly set the region
 
   http_target {
