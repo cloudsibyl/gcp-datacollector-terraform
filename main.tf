@@ -67,18 +67,24 @@ resource "google_cloud_run_v2_job" "job" {
 resource "google_cloud_scheduler_job" "cloud_run_job_scheduler" {
   name        = "${var.cloud_run_job_name}-scheduler"
   description = "Scheduled trigger for Cloud Run job"
-  schedule    = "0 21 * * *"  # Runs every day at 9 PM
-  time_zone   = "America/Toronto"  # Set according to your timezone
+  schedule    = "30 20 * * *"  # Runs every night at 8:30 PM
+  time_zone   = "UTC"  # Set to UTC
   region      = var.cloud_run_location  # Explicitly set the region
 
   http_target {
     http_method = "POST"
     uri         = "https://${var.cloud_run_location}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.job.name}:run"
 
-    oidc_token {
+    headers = {
+      "User-Agent" = "Google-Cloud-Scheduler"
+    }
+
+    oauth_token {
       service_account_email = var.service_account_email
+      scope                 = "https://www.googleapis.com/auth/cloud-platform"
     }
   }
+
   depends_on = [
     google_project_iam_member.cloud_scheduler_permissions,
     google_project_iam_member.cloud_run_invoker_permissions
