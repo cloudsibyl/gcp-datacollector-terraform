@@ -46,6 +46,22 @@ resource "google_cloud_run_v2_job" "job" {
           name  = "BUCKET_NAME"
           value = var.bucket_name
         }
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "DATASET_ID"
+          value = var.dataset_id
+        }
+        env {
+          name  = "COST_TABLE"
+          value = var.cost_table
+        }
+        env {
+          name  = "DETAILED_COST_TABLE"
+          value = var.detailed_cost_table
+        }
         resources {
           limits = {
             cpu    = "1000m"

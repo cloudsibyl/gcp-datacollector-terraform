@@ -13,6 +13,21 @@ variable "bucket_name" {
   type        = string
 }
 
+variable "dataset_id" {
+  description = "The ID of the BigQuery dataset to be used by the Cloud Run job."
+  type        = string
+}
+
+variable "cost_table" {
+  description = "The name of the BigQuery table to be used by the Cloud Run job."
+  type        = string
+}
+
+variable "detailed_cost_table" {
+  description = "The name of the BigQuery table to be used by the Cloud Run job."
+  type        = string
+}
+
 variable "service_account_email" {
   description = "The email of the service account to be used by the Cloud Run job."
   type        = string
