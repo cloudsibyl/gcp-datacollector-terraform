@@ -3,36 +3,60 @@ provider "google" {
   region  = var.cloud_run_location
 }
 
+# Create a new service account named Cloudsibyl-datacollector-SA
+resource "google_service_account" "datacollector_sa" {
+  account_id   = "cloudsibyl-datacollector-sa"
+  display_name = "Cloudsibyl Data Collector Service Account"
+}
+
+# Assign Viewer roles (read-only access to organization, folder, and other services)
 resource "google_organization_iam_member" "org_viewer" {
   for_each = toset([
     "roles/resourcemanager.organizationViewer",
     "roles/resourcemanager.folderViewer",
-    "roles/viewer"  
+    "roles/viewer"
   ])
   
   org_id = var.organization_id
-  member = "serviceAccount:${var.service_account_email}"
+  member = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role   = each.key
 }
 
+# Assign BigQuery Data Editor role (allow creating, deleting, and reading tables)
+resource "google_project_iam_member" "bigquery_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.datacollector_sa.email}"
+}
+
+# Cloud Scheduler admin permissions
 resource "google_project_iam_member" "cloud_scheduler_permissions" {
   project = var.project_id
-  member  = "serviceAccount:${var.service_account_email}"
+  member  = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role    = "roles/cloudscheduler.admin"
 }
 
+# Assign permissions for storage bucket access (object creator and object admin)
 resource "google_storage_bucket_iam_member" "bucket_access" {
   bucket = var.bucket_name
-  member = "serviceAccount:${var.service_account_email}"
+  member = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role   = "roles/storage.objectCreator"
 }
 
+resource "google_storage_bucket_iam_member" "bucket_access_object_admin" {
+  bucket = var.bucket_name
+  member = "serviceAccount:${google_service_account.datacollector_sa.email}"
+  role   = "roles/storage.objectAdmin"
+}
+
+# Assign permissions for Cloud Run invocation
 resource "google_project_iam_member" "cloud_run_invoker_permissions" {
   project = var.project_id
-  member  = "serviceAccount:${var.service_account_email}"
+  member  = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role    = "roles/run.invoker"
 }
 
+# Cloud Run job using the new service account
 resource "google_cloud_run_v2_job" "job" {
   name               = var.cloud_run_job_name
   location           = var.cloud_run_location
@@ -69,7 +93,8 @@ resource "google_cloud_run_v2_job" "job" {
           }
         }
       }
-      service_account = var.service_account_email
+      # Use the newly created service account
+      service_account = google_service_account.datacollector_sa.email
     }
   }
 
@@ -80,6 +105,7 @@ resource "google_cloud_run_v2_job" "job" {
   }
 }
 
+# Cloud Scheduler to trigger Cloud Run jobs using the service account
 resource "google_cloud_scheduler_job" "cloud_run_job_scheduler" {
   name        = "${var.cloud_run_job_name}-scheduler"
   description = "Scheduled trigger for Cloud Run job"
@@ -96,7 +122,7 @@ resource "google_cloud_scheduler_job" "cloud_run_job_scheduler" {
     }
 
     oauth_token {
-      service_account_email = var.service_account_email
+      service_account_email = google_service_account.datacollector_sa.email
       scope                 = "https://www.googleapis.com/auth/cloud-platform"
     }
   }
