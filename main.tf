@@ -5,7 +5,7 @@ provider "google" {
 
 # Create a new service account named Cloudsibyl-datacollector-SA
 resource "google_service_account" "datacollector_sa" {
-  account_id   = "cloudsibyl-datacollector-sa"
+  account_id   = "${var.project_id}-sa"
   display_name = "Cloudsibyl Data Collector Service Account"
 }
 
