@@ -58,7 +58,7 @@ resource "google_project_iam_member" "cloud_run_invoker_permissions" {
 
 # Cloud Run job using the new service account
 resource "google_cloud_run_v2_job" "job" {
-  name               = var.cloud_run_job_name
+  name               = "cloudsibyl-datacollector-run-job"
   location           = var.cloud_run_location
   deletion_protection = false
 
@@ -77,14 +77,6 @@ resource "google_cloud_run_v2_job" "job" {
         env {
           name  = "DATASET_ID"
           value = var.dataset_id
-        }
-        env {
-          name  = "COST_TABLE"
-          value = var.cost_table
-        }
-        env {
-          name  = "DETAILED_COST_TABLE"
-          value = var.detailed_cost_table
         }
         resources {
           limits = {
@@ -107,7 +99,7 @@ resource "google_cloud_run_v2_job" "job" {
 
 # Cloud Scheduler to trigger Cloud Run jobs using the service account
 resource "google_cloud_scheduler_job" "cloud_run_job_scheduler" {
-  name        = "${var.cloud_run_job_name}-scheduler"
+  name        = "cloudsibyl-datacollector-run-job-scheduler"
   description = "Scheduled trigger for Cloud Run job"
   schedule    = "30 20 * * *"  # Runs every night at 8:30 PM
   time_zone   = "Etc/UTC"  # Set to UTC
