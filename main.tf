@@ -3,9 +3,14 @@ provider "google" {
   region  = var.cloud_run_location
 }
 
-# Create a new service account named Cloudsibyl-datacollector-SA
+# Generate a 5-digit random number
+resource "random_id" "sa_suffix" {
+  byte_length = 2
+}
+
+# Create a new service account with a dynamic ID based on a 5-digit random number
 resource "google_service_account" "datacollector_sa" {
-  account_id   = "${var.project_id}-sa"
+  account_id   = "cloudsibyl-${random_id.sa_suffix.hex}-sa"
   display_name = "Cloudsibyl Data Collector Service Account"
 }
 
