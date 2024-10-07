@@ -14,6 +14,12 @@ resource "google_service_account" "datacollector_sa" {
   display_name = "Cloudsibyl Data Collector Service Account"
 }
 
+# Create a new storage bucket
+resource "google_storage_bucket" "bucket" {
+  name     = var.bucket_name
+  location = var.cloud_run_location
+}
+
 # Assign Viewer roles (read-only access to organization, folder, and other services)
 resource "google_organization_iam_member" "org_viewer" {
   for_each = toset([
@@ -43,13 +49,13 @@ resource "google_project_iam_member" "cloud_scheduler_permissions" {
 
 # Assign permissions for storage bucket access (object creator and object admin)
 resource "google_storage_bucket_iam_member" "bucket_access" {
-  bucket = var.bucket_name
+  bucket = google_storage_bucket.bucket.name
   member = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role   = "roles/storage.objectCreator"
 }
 
 resource "google_storage_bucket_iam_member" "bucket_access_object_admin" {
-  bucket = var.bucket_name
+  bucket = google_storage_bucket.bucket.name
   member = "serviceAccount:${google_service_account.datacollector_sa.email}"
   role   = "roles/storage.objectAdmin"
 }
@@ -73,7 +79,7 @@ resource "google_cloud_run_v2_job" "job" {
         image = "cloudsibyl/cloudsibyl-gcp-data-collector:latest"
         env {
           name  = "BUCKET_NAME"
-          value = var.bucket_name
+          value = google_storage_bucket.bucket.name
         }
         env {
           name  = "PROJECT_ID"
