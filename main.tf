@@ -14,10 +14,12 @@ resource "google_service_account" "datacollector_sa" {
   display_name = "Cloudsibyl Data Collector Service Account"
 }
 
-# Create a new storage bucket
+# Create a new storage bucket with uniform bucket-level access
 resource "google_storage_bucket" "bucket" {
   name     = var.bucket_name
   location = var.cloud_run_location
+
+  uniform_bucket_level_access = true
 }
 
 # Assign Viewer roles (read-only access to organization, folder, and other services)
