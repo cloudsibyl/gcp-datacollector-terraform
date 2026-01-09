@@ -77,6 +77,7 @@ resource "google_cloud_run_v2_job" "job" {
 
   template {
     template {
+      timeout = "14400s"  # 4 hours (4 * 60 * 60 = 14400 seconds)
       containers {
         image = "cloudsibyl/cloudsibyl-gcp-data-collector:latest"
         env {
